@@ -17,7 +17,9 @@ Export Visio Files to PDF
 
 optional arguments:
   -h, --help            show this help message and exit
-  --input DIR, -i DIR   The directory to recurisvely search for Visio files.
-  --output DIR, -o DIR  The directory to save the PDF files.
-  --collapse, -c        Save files to root of output directory.
+  --input DIR, -i DIR   The directory to recurisvely search for Visio files (Defaults to current directory).
+  --output DIR, -o DIR  The directory to save the exported files. (Defaults to current directory)
+  --collapse, -c        Save files to root of output directory / do not preserve folder structure
+  --vsd, -v             Convert all .vsd files in input directory to .vsdx format, and save in output directory
+  --pdf, -p             Convert all .vsdx files in input directory to PDF, and save in output directory
 ```
