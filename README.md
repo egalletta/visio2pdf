@@ -4,6 +4,7 @@ Converts all Visio files in folder recurisvely to PDF.
 
 #### Requirements:
 ```
+Microsoft Visio
 python3
 pywin32 (use pip install -r requirements.txt)
 ```
