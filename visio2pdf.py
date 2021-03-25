@@ -14,7 +14,7 @@ def copy_dir(src, dst, *, follow_sym=True):
         shutil.copystat(src, dst, follow_symlinks=follow_sym)
     return dst
 
-def convert_to_vsdx(in_dir: str, out_dir: str, collapse: bool=False) -> None:
+def convert_to_vsdm(in_dir: str, out_dir: str, collapse: bool=False) -> None:
     if in_dir == None:
         path = pathlib.Path().absolute()
     else:
@@ -30,28 +30,26 @@ def convert_to_vsdx(in_dir: str, out_dir: str, collapse: bool=False) -> None:
     if not collapse:
         shutil.copytree(path, out_path, dirs_exist_ok=True, copy_function=copy_dir)
     files = glob.glob(str(path) + '/**/*.vsd', recursive=True)
-    visio = win32com.client.Dispatch("Visio.InvisibleApp")
+    visio = win32com.client.gencache.EnsureDispatch("Visio.Application")
     for f in files:
         try:
-            # print(f"Converting {f}")
+            print(f"Converting {f}")
             doc = visio.Documents.Open(f)
             if collapse:
                 prefix = f.split("\\")[-1].split(".")[0]
-                fname = str(out_path) + f"\\{prefix}.vsd"
-                print(fname)
+                fname = str(out_path) + f"\\{prefix}.vsdm"
+                print(f" Saved {fname}")
                 doc.SaveAs(fname)
             else:
                 fname = str(out_path) \
                     + "\\" \
                     + str(f).replace(str(os.path.commonprefix([f,out_path])), "").split(".")[0] \
-                    + ".vsdx"
+                    + ".vsdm"
                 doc.SaveAs(fname)
                 print(fname)
             doc.Close()
         except Exception as e:
-            doc.Close()
-            visio.Quit()
-            raise e
+            print(e)
     visio.Quit()
 
 def convert_pdf(in_dir: str, out_dir: str, collapse: bool=False) -> None:
@@ -69,22 +67,22 @@ def convert_pdf(in_dir: str, out_dir: str, collapse: bool=False) -> None:
     print(f"Output directory: {str(out_path)}")
     if not collapse:
         shutil.copytree(path, out_path, dirs_exist_ok=True, copy_function=copy_dir)
-    files = glob.glob(str(path) + '/**/*.vsdx', recursive=True)
-    visio = win32com.client.Dispatch("Visio.InvisibleApp")
+    files = glob.glob(str(path) + '/**/*.vsd[m,x]', recursive=True)
+    visio = win32com.client.gencache.EnsureDispatch("Visio.Application")
     for f in files:
         try:
-            # print(f"Converting {f}")
+            print(f"Converting {f}")
             doc = visio.Documents.Open(f)
             if collapse:
                 prefix = f.split("\\")[-1].split(".")[0]
-                fname = str(out_path) + f"\\{prefix}.pdf"
+                fname = str(out_path) + f"\\{prefix}-exported.pdf"
                 print(fname)
                 doc.ExportAsFixedFormat( 1, fname , 1, 0 )
             else:
                 fname = str(out_path) \
                     + "\\" \
                     + str(f).replace(str(os.path.commonprefix([f,out_path])), "").split(".")[0] \
-                    + ".pdf"
+                    + "-exported.pdf"
                 doc.ExportAsFixedFormat( 1, fname , 1, 0 )
                 print(fname)
             doc.Close()
@@ -110,7 +108,7 @@ def main():
         p.print_help()
     
     if args.vsd:
-        convert_to_vsdx(in_dir=args.input, out_dir=args.output, collapse=args.collapse)
+        convert_to_vsdm(in_dir=args.input, out_dir=args.output, collapse=args.collapse)
     if args.pdf:
         convert_pdf(in_dir=args.input, out_dir=args.output, collapse=args.collapse)
 
