@@ -6,6 +6,11 @@ import time
 import argparse
 import shutil
 
+"""
+Copies the directory tree structure from src to dst
+"""
+
+
 def copy_dir(src, dst, *, follow_sym=True):
     if os.path.isdir(dst):
         dst = os.path.join(dst, os.path.basename(src))
@@ -14,7 +19,13 @@ def copy_dir(src, dst, *, follow_sym=True):
         shutil.copystat(src, dst, follow_symlinks=follow_sym)
     return dst
 
-def convert_to_vsdm(in_dir: str, out_dir: str, collapse: bool=False) -> None:
+
+"""
+Converts all .vsd files in the in_dir to .vsdx and copies the converted file to the out_dir 
+"""
+
+
+def convert_to_vsdm(in_dir: str, out_dir: str, collapse: bool = False) -> None:
     if in_dir == None:
         path = pathlib.Path().absolute()
     else:
@@ -29,7 +40,7 @@ def convert_to_vsdm(in_dir: str, out_dir: str, collapse: bool=False) -> None:
     print(f"Output directory: {str(out_path)}")
     if not collapse:
         shutil.copytree(path, out_path, dirs_exist_ok=True, copy_function=copy_dir)
-    files = glob.glob(str(path) + '/**/*.vsd', recursive=True)
+    files = glob.glob(str(path) + "/**/*.vsd", recursive=True)
     visio = win32com.client.gencache.EnsureDispatch("Visio.Application")
     for f in files:
         try:
@@ -41,10 +52,14 @@ def convert_to_vsdm(in_dir: str, out_dir: str, collapse: bool=False) -> None:
                 print(f" Saved {fname}")
                 doc.SaveAs(fname)
             else:
-                fname = str(out_path) \
-                    + "\\" \
-                    + str(f).replace(str(os.path.commonprefix([f,out_path])), "").split(".")[0] \
+                fname = (
+                    str(out_path)
+                    + "\\"
+                    + str(f)
+                    .replace(str(os.path.commonprefix([f, out_path])), "")
+                    .split(".")[0]
                     + ".vsdm"
+                )
                 doc.SaveAs(fname)
                 print(fname)
             doc.Close()
@@ -52,7 +67,13 @@ def convert_to_vsdm(in_dir: str, out_dir: str, collapse: bool=False) -> None:
             print(e)
     visio.Quit()
 
-def convert_pdf(in_dir: str, out_dir: str, collapse: bool=False) -> None:
+
+"""
+Converts all .vsdx files in the in_dir to .pdf and copies the converted file to the out_dir 
+"""
+
+
+def convert_pdf(in_dir: str, out_dir: str, collapse: bool = False) -> None:
     if in_dir == None:
         path = pathlib.Path().absolute()
     else:
@@ -67,7 +88,7 @@ def convert_pdf(in_dir: str, out_dir: str, collapse: bool=False) -> None:
     print(f"Output directory: {str(out_path)}")
     if not collapse:
         shutil.copytree(path, out_path, dirs_exist_ok=True, copy_function=copy_dir)
-    files = glob.glob(str(path) + '/**/*.vsd[m,x]', recursive=True)
+    files = glob.glob(str(path) + "/**/*.vsd[m,x]", recursive=True)
     visio = win32com.client.gencache.EnsureDispatch("Visio.Application")
     for f in files:
         try:
@@ -77,13 +98,17 @@ def convert_pdf(in_dir: str, out_dir: str, collapse: bool=False) -> None:
                 prefix = f.split("\\")[-1].split(".")[0]
                 fname = str(out_path) + f"\\{prefix}-exported.pdf"
                 print(fname)
-                doc.ExportAsFixedFormat( 1, fname , 1, 0 )
+                doc.ExportAsFixedFormat(1, fname, 1, 0)
             else:
-                fname = str(out_path) \
-                    + "\\" \
-                    + str(f).replace(str(os.path.commonprefix([f,out_path])), "").split(".")[0] \
+                fname = (
+                    str(out_path)
+                    + "\\"
+                    + str(f)
+                    .replace(str(os.path.commonprefix([f, out_path])), "")
+                    .split(".")[0]
                     + "-exported.pdf"
-                doc.ExportAsFixedFormat( 1, fname , 1, 0 )
+                )
+                doc.ExportAsFixedFormat(1, fname, 1, 0)
                 print(fname)
             doc.Close()
         except Exception as e:
@@ -95,22 +120,52 @@ def convert_pdf(in_dir: str, out_dir: str, collapse: bool=False) -> None:
 
 def main():
     p = argparse.ArgumentParser(description="Export Visio Files to PDF")
-    p.add_argument("--input", "-i", metavar="DIR", type=str, help="The directory to recurisvely search for Visio files (Defaults to current directory).")
-    p.add_argument("--output", "-o", metavar="DIR", type=str, help="The directory to save the exported files. (Defaults to current directory)")
-    p.add_argument("--collapse", "-c", help="Save files to root of output directory / do not preserve folder structure", action="store_true")
-    p.add_argument("--vsd", "-v", help="Convert all .vsd files in input directory to .vsdx format, and save in output directory", action="store_true")
-    p.add_argument("--pdf", "-p", help="Convert all .vsdx files in input directory to PDF, and save in output directory", action="store_true")
+    p.add_argument(
+        "--input",
+        "-i",
+        metavar="DIR",
+        type=str,
+        help="The directory to recurisvely search for Visio files (Defaults to current directory).",
+    )
+    p.add_argument(
+        "--output",
+        "-o",
+        metavar="DIR",
+        type=str,
+        help="The directory to save the exported files. (Defaults to current directory)",
+    )
+    p.add_argument(
+        "--collapse",
+        "-c",
+        help="Save files to root of output directory / do not preserve folder structure",
+        action="store_true",
+    )
+    p.add_argument(
+        "--vsd",
+        "-v",
+        help="Convert all .vsd files in input directory to .vsdx format, and save in output directory",
+        action="store_true",
+    )
+    p.add_argument(
+        "--pdf",
+        "-p",
+        help="Convert all .vsdx files in input directory to PDF, and save in output directory",
+        action="store_true",
+    )
     args = p.parse_args()
-    
+
     if not args.pdf and not args.vsd:
         print("\n\nNeed at least one of the following options:\n")
-        print("\t--vsd, -v             Convert all .vsd files to newer .vsdx files\n\t--pdf, -p             Convert all .vsdx files to PDF\n\n")
+        print(
+            "\t--vsd, -v             Convert all .vsd files to newer .vsdx files\n\t--pdf, -p             Convert all .vsdx files to PDF\n\n"
+        )
         p.print_help()
-    
+
     if args.vsd:
         convert_to_vsdm(in_dir=args.input, out_dir=args.output, collapse=args.collapse)
     if args.pdf:
         convert_pdf(in_dir=args.input, out_dir=args.output, collapse=args.collapse)
+
 
 if __name__ == "__main__":
     main()
